@@ -3,14 +3,17 @@ let num = 6;
 let currentLine = 1;
 let currentChar = 1;
 let statements = [];
+let reservedWords = [ "begin", "end", "bool", "int", ";", ":=", "if", "then", "else", "fi", "while", "do", "od", "print", "or", "and", "not", "=", "<", "+", "-", "*", "/", "(", ")", "false", "true" ];
 
-//run main
-main();
-
+main(); //start of program
 function main() {
   let text = getGrammar();
-  //Do some work here
-  manipulateGrammar(text);
+  grammarToStatements(text);
+  // have a list of all statements now
+  // Now we have to calculate first follow for each statement
+  console.log(findStatement("Factor"));
+  makeFirsts();
+  makeFollows();
 
   //token loop
   next();
@@ -21,7 +24,20 @@ function main() {
   console.log(kind());
 }
 
-function manipulateGrammar(text) {
+//todo
+function makeFirsts() {}
+function makeFollows() {}
+
+function findStatement(stmt) {
+  for(let i = 0; i < statements.length; i++) {
+    if(statements[i][0] == stmt) {
+      return statements[i];
+    }
+  }
+  return 'err';
+}
+
+function grammarToStatements(text) {
   let grammarArray = text.split(/\s+/g);
   let numStatements = 0;
   let currentStatement = 0;
@@ -43,11 +59,6 @@ function manipulateGrammar(text) {
       statements[currentStatement].push(grammarArray[i]);
     }
   }
-
-  for(let i = 0; i < statements.length; i++) {
-    console.log(statements[i]);
-  }
-
 }
 
 function next() {
