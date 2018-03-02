@@ -1,12 +1,16 @@
+//global variables
 let num = 6;
 let currentLine = 1;
 let currentChar = 1;
+let statements = [];
+
+//run main
 main();
 
 function main() {
   let text = getGrammar();
   //Do some work here
-
+  manipulateGrammar(text);
 
   //token loop
   next();
@@ -15,6 +19,35 @@ function main() {
     next();
   }
   console.log(kind());
+}
+
+function manipulateGrammar(text) {
+  let grammarArray = text.split(/\s+/g);
+  let numStatements = 0;
+  let currentStatement = 0;
+
+  for(let i = 0; i <= grammarArray.length; i++) {
+    if(grammarArray[i] == '.') {
+      numStatements++;
+    }
+  }
+
+  for(let i = 0; i < numStatements; i++) {
+    statements[i] = [];
+  }
+
+  for(let i = 0; i < grammarArray.length - 1; i++) {
+    if(grammarArray[i] == '.') {
+      currentStatement++;
+    } else {
+      statements[currentStatement].push(grammarArray[i]);
+    }
+  }
+
+  for(let i = 0; i < statements.length; i++) {
+    console.log(statements[i]);
+  }
+
 }
 
 function next() {
