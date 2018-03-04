@@ -86,19 +86,27 @@ function makeLexemes() {
         break;
 
       case ':':
-        if(value === '/') {
+        if (value === '') {
+          value = fileChars[i];
+        } else {
           addLexeme({ value: value, line: line, character: character - value.length});
-          value = '';
+          value = fileChars[i];
         }
-        value = value + fileChars[i];
         break;
 
       default:
-
         if(value === '/') {
           addLexeme({ value: value, line: line, character: character - value.length});
           value = '';
         }
+
+        if (value === ':' && fileChars[i] === '=') {
+          value = value + fileChars[i];
+          addLexeme({ value: value, line: line, character: character + 1 - value.length});
+          value = '';
+          break;
+        }
+
 
         if(isTerminalSymbol(fileChars[i])) {
           if (value != '') {
@@ -153,8 +161,52 @@ function kind() {
   return kind;
 }
 
-function isID(word) { return true; }
-function isNUM(word) { return true; }
+function isID(word) {
+  if(!isLetter(word[0])) {
+    return false;
+  }
+
+
+  for(let i = 1; i < word.length; i++) {
+    if(isNumber(word[i])) {
+      continue;
+    } else if (isLetter(word[i])) {
+      continue;
+    } else if (word[i] === '_') {
+      continue;
+    } else {
+      return false;
+    }
+  }
+ return true;
+}
+
+function isNUM(word) {
+  for(let i = 0; i < word.length; i++) {
+    if(!isNumber(word[i])) {
+     return false;
+    }
+  }
+ return true;
+}
+
+function isLetter(letter) {
+  for (let i = 0; i < letters.length; i++) {
+    if (letter === letters.length) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isNumber(number) {
+  for (let i = 0; i < numbers.length; i++) {
+    if (number === numbers.length) {
+      return true;
+    }
+  }
+  return false;
+}
 
 function isReservedWord(word) {
   for (let i = 0; i < reservedWords.length; i++) {
