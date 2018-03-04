@@ -21,8 +21,6 @@ function main() {
 async function tokenLoop() {
   next();
   while ( kind() != "end-of-text" ) {
-    if ( kind() === "ERROR" ) { console.log("<" + kind() +", " + position() + ">"); break; }
-
     if ( value() === kind() ) {
       console.log("<" + value() + ", " + position() + ">");
     } else {
@@ -32,6 +30,7 @@ async function tokenLoop() {
     await sleep(1); //just to be safe
     next();
   }
+  console.log(kind());
 }
 
 function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
