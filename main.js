@@ -3,7 +3,6 @@ let reservedWords = [ "begin", "end", "bool", "int", "if", "then", "else", "fi",
 let terminalSymbols = [ ";", "=", "<", "+", "-", "*", "/", "(", ")", ":=" ];
 let numbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 let letters = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
-let underscore = "_";
 let fileChars = [];
 let eof = 0;
 let lexemes = [];
@@ -78,10 +77,8 @@ function makeLexemes() {
         } else if (value === '') {
           value = fileChars[i];
         } else {
-          console.log(value, fileChars[i]);
           addLexeme({ value: value, line: line, character: character - value.length});
           value = fileChars[i];
-
         }
         break;
 
@@ -166,7 +163,6 @@ function isID(word) {
     return false;
   }
 
-
   for(let i = 1; i < word.length; i++) {
     if(isNumber(word[i])) {
       continue;
@@ -183,8 +179,10 @@ function isID(word) {
 
 function isNUM(word) {
   for(let i = 0; i < word.length; i++) {
-    if(!isNumber(word[i])) {
-     return false;
+    if(isNumber(word[i])) {
+      continue;
+    } else {
+      return false;
     }
   }
  return true;
@@ -192,7 +190,7 @@ function isNUM(word) {
 
 function isLetter(letter) {
   for (let i = 0; i < letters.length; i++) {
-    if (letter === letters.length) {
+    if (letter === letters[i]) {
       return true;
     }
   }
@@ -201,7 +199,7 @@ function isLetter(letter) {
 
 function isNumber(number) {
   for (let i = 0; i < numbers.length; i++) {
-    if (number === numbers.length) {
+    if (number === numbers[i]) {
       return true;
     }
   }
