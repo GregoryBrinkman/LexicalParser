@@ -1,30 +1,35 @@
 //global variables
+let reservedWords = [ "begin", "end", "bool", "int", "if", "then", "else", "fi", "while", "do", "od", "print", "or", "and", "not", "false", "true" ];
+let terminalSymbols = [ ";", "=", "<", "+", "-", "*", "/", "(", ")", ":=" ];
+let numbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+let letters = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
+let underscore = "_";
 let fileChars = [];
-let wordBuff = [];
 let eof = 0;
 let lexemes = [];
 // a lexeme is { kind: '', value: '', position: { line: 0, Character: 0 }}
 let lexemeIndex = 0;
 let currentLexeme;
-let reservedWords = [ "begin", "end", "bool", "int", ";", ":=", "if", "then", "else", "fi", "while", "do", "od", "print", "or", "and", "not", "=", "<", "+", "-", "*", "/", "(", ")", "false", "true" ];
-let numbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
-let letters = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
-let underscore = "_";
 
 main(); //start of program
 function main() {
   let text = getText();
   textToLex(text);
   makeLexemes();
-
- //token loop
   tokenLoop();
 }
 
 async function tokenLoop() {
   next();
   while ( kind() != "end-of-text" ) {
-    console.log("<" + value() + ", " + kind() + ", " + position() + ">");
+    if ( kind() === "ERROR" ) { console.log("<" + kind() +", " + position() + ">"); break; }
+
+    if ( value() === kind() ) {
+      console.log("<" + value() + ", " + position() + ">");
+    } else {
+      console.log("<" + kind() + ", " + value() + ", " + position() + ">");
+    }
+
     await sleep(1); //just to be safe
     next();
   }
@@ -35,10 +40,6 @@ function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 function makeLexemes() {
   // eof: num of chars
   // fileChars: array of each character from files
-  //
-  // Now i want to get a word in the wordBuff
-  // and check it against reservedWords
-  let kind = '';
   let value = '';
   let line = 1;
   let character = 0;
@@ -48,16 +49,51 @@ function makeLexemes() {
 
     switch(fileChars[i]) {
       case '\n':
-        addLexeme({ kind: kind, value: value, line: line, character: character - value.length});
+        if(value == '') {
+          character = 0;
+          line++;
+          break;
+        }
+
+        addLexeme({ value: value, line: line, character: character - value.length});
         character = 0;
         line++;
         value = '';
         break;
+
       case ' ':
-        addLexeme({ kind: kind, value: value, line: line, character: character - value.length});
+        if(value == '') {
+          break;
+        }
+        addLexeme({ value: value, line: line, character: character - value.length});
         value = '';
         break;
+
+      case '/':
+      //if(value === '//') {
+      //while((i < eof) && (fileChars[i] != '\n')) { i++; }
+      //character = 0;
+      //value = '';
+      //}
+        value = value + fileChars[i];
+        break;
+
+      case ':':
+        value = value + fileChars[i];
+        break;
+
       default:
+        if(isTerminalSymbol(fileChars[i])) {
+          console.log("TERM");
+          if (value) {
+            addLexeme({ value: value, line: line, character: character - (value.length + 1)});
+          }
+          value = fileChars[i];
+          addLexeme({ value: value, line: line, character: character - value.length});
+          value = '';
+          break;
+        }
+
         value = value + fileChars[i];
         break;
     }
@@ -85,7 +121,11 @@ function kind() {
 
   let kind = '';
 
-  if(isInReservedWords(currentLexeme.value)) {
+  if(currentLexeme.value === 'ERROR') {
+    kind = 'ERROR';
+  } else if(isReservedWord(currentLexeme.value)) {
+    kind = currentLexeme.value;
+  } else if(isTerminalSymbol(currentLexeme.value)) {
     kind = currentLexeme.value;
   } else if(isID(currentLexeme.value)) {
     kind = 'ID';
@@ -100,7 +140,7 @@ function kind() {
 function isID(word) { return true; }
 function isNUM(word) { return true; }
 
-function isInReservedWords(word) {
+function isReservedWord(word) {
   for (let i = 0; i < reservedWords.length; i++) {
     if (reservedWords[i] == word) {
       return true;
@@ -109,12 +149,18 @@ function isInReservedWords(word) {
   return false;
 }
 
+function isTerminalSymbol(word) {
+  for (let i = 0; i < terminalSymbols.length; i++) {
+    if (terminalSymbols[i] === word) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function value() {
   //returns the value of the lexeme (if it is an "ID" or "NUM")
-  let value = '';
-  value = currentLexeme.value;
-
-  return value;
+  return currentLexeme.value;
 }
 
 function position() {
@@ -125,11 +171,9 @@ function position() {
 function getText(){
   let fs = require('fs');
   let path = require('path');
-
   let file = 'test.txt';
-  console.log("Lexing file test.txt in current directory");
-  console.log("Printing out tokens for reference");
 
+  console.log("Lexing file test.txt in current directory\nPrinting out tokens for reference\n");
 
   try {
     return fs.readFileSync(path.join(__dirname, '/' + file)).toString();
