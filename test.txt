@@ -1,0 +1,5 @@
+begin end bool int if then else fi while do od print or and not false true //reservedWords
+;:==<+-*/() //TerminatorSymbols
+a a1 a_ a_99 a_a_8_9 // IDs
+1 12 123 1234 21345 12346679 // NUMs
+: 3a 3_ _id @ # :0 //errors
