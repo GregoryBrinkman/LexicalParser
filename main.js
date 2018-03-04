@@ -5,14 +5,20 @@ let numbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 let letters = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
 let fileChars = [];
 let eof = 0;
+// a lexeme is { kind: '', value: '', line: 0, character: 0 }}
 let lexemes = [];
-// a lexeme is { kind: '', value: '', position: { line: 0, Character: 0 }}
 let lexemeIndex = 0;
 let currentLexeme;
 
 main(); //start of program
 function main() {
-  let text = getText();
+  let file = '';
+  if (process.argv.length === 2) {
+    file = 'test.txt';
+  } else {
+    file = process.argv[2];
+  }
+  let text = getText(file);
   textToLex(text);
   makeLexemes();
   tokenLoop();
@@ -233,12 +239,11 @@ function position() {
   return 'line: ' + currentLexeme.line + '; character: ' + currentLexeme.character;
 }
 
-function getText(){
+function getText(file){
   let fs = require('fs');
   let path = require('path');
-  let file = 'test.txt';
 
-  console.log("Lexing file test.txt in current directory\nPrinting out tokens for reference\n");
+  console.log("Lexing file " + file + " in current directory\nPrinting out tokens for reference\n");
 
   try {
     return fs.readFileSync(path.join(__dirname, '/' + file)).toString();
