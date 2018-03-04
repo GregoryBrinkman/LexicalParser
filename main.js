@@ -70,26 +70,42 @@ function makeLexemes() {
         break;
 
       case '/':
-      //if(value === '//') {
-      //while((i < eof) && (fileChars[i] != '\n')) { i++; }
-      //character = 0;
-      //value = '';
-      //}
-        value = value + fileChars[i];
+        if(value === '/') {
+          while((i < eof) && (fileChars[i] != '\n')) { i++; }
+          character = 0;
+          line++;
+          value = '';
+        } else if (value === '') {
+          value = fileChars[i];
+        } else {
+          console.log(value, fileChars[i]);
+          addLexeme({ value: value, line: line, character: character - value.length});
+          value = fileChars[i];
+
+        }
         break;
 
       case ':':
+        if(value === '/') {
+          addLexeme({ value: value, line: line, character: character - value.length});
+          value = '';
+        }
         value = value + fileChars[i];
         break;
 
       default:
+
+        if(value === '/') {
+          addLexeme({ value: value, line: line, character: character - value.length});
+          value = '';
+        }
+
         if(isTerminalSymbol(fileChars[i])) {
-          console.log("TERM");
-          if (value) {
-            addLexeme({ value: value, line: line, character: character - (value.length + 1)});
+          if (value != '') {
+            addLexeme({ value: value, line: line, character: character - value.length});
           }
           value = fileChars[i];
-          addLexeme({ value: value, line: line, character: character - value.length});
+          addLexeme({ value: value, line: line, character: character + 1 - value.length});
           value = '';
           break;
         }
