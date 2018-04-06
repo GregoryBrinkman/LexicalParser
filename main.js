@@ -1,3 +1,4 @@
+const parse = require('./parser.js');
 //global variables
 let reservedWords = [ "begin", "end", "bool", "int", "if", "then", "else", "fi", "while", "do", "od", "print", "or", "and", "not", "false", "true" ];
 let terminalSymbols = [ ";", "=", "<", "+", "-", "*", "/", "(", ")", ":=" ];
@@ -21,35 +22,14 @@ function main() {
   let text = getText(file);
   textToLex(text);
   makeLexemes();
-  tokenLoop();
+  parse.parse(lexemes);
 }
-
-async function tokenLoop() {
-  next();
-  while ( kind() != "end-of-text" ) {
-    if( kind() == "ERROR" ) { break;}
-    if ( value() === kind() ) {
-      console.log("<" + value() + ", " + position() + ">");
-    } else {
-      console.log("<" + kind() + ", " + value() + ", " + position() + ">");
-    }
-
-    await sleep(1); //just to be safe
-    next();
-  }
-  if( kind() == "ERROR" ) {
-    console.log("<" + kind() + ", " + value() + ", " + position() + ">");
-  } else {
-    console.log(kind());
-  }
-}
-
-function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
 function makeLexemes() {
   // eof: num of chars
   // fileChars: array of each character from files
   let value = '';
+  let kind
   let line = 1;
   let character = 0;
 
@@ -129,9 +109,11 @@ function makeLexemes() {
         break;
     }
   }
+  let end = { kind: 'end-of-text', value: 'end-of-text' };
+  lexemes.push(end);
 }
 
-function addLexeme(obj) { lexemes.push(obj); }
+function addLexeme(obj) { obj.kind = kind(obj); lexemes.push(obj); }
 
 function textToLex(text) {
   for (let i = 0; i < text.length; i++) {
@@ -144,7 +126,7 @@ function next() {
   currentLexeme = lexemes[lexemeIndex++];
 }
 
-function kind() {
+function kind(currentLexeme) {
   //returns the kind of lexeme that was read
   if(lexemeIndex > lexemes.length) {
     return 'end-of-text';
@@ -248,7 +230,7 @@ function getText(file){
   let fs = require('fs');
   let path = require('path');
 
-  console.log("Lexing file " + file + " in current directory\nPrinting out tokens for reference\n");
+  // console.log("Lexing file " + file + " in current directory\nPrinting out tokens for reference\n");
 
   try {
     return fs.readFileSync(path.join(__dirname, '/' + file)).toString();
