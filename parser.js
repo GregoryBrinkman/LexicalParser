@@ -1,42 +1,138 @@
+let lexeme_index = 0;
 let statements = [];
+let lexemes;
 
-function parse(lexemes) {
-
-  let grammar = getGrammar();
-  manipulateGrammar(grammar);
-  console.log(lexemes);
-  console.log(statements)
+function parse(lexs) {
+  lexemes = lexs;
+  expression(['end-of-text']);
+  console.log('is valid? TRUE');
 }
 
-function getGrammar(){
-  let fs = require('fs');
-  let path = require('path');
-
-  return fs.readFileSync(path.join(__dirname, '/grammar.txt')).toString();
+function expression(follow) {
+  booleanExpression(follow);
 }
 
-function manipulateGrammar(text) {
-  let grammarArray = text.split(/\s+/g);
-  let numStatements = 0;
-  let currentStatement = 0;
+function booleanExpression(follow) {
+  let newFollow = follow;
+  newFollow.push('or');
 
-  for(let i = 0; i <= grammarArray.length; i++) {
-    if(grammarArray[i] == '.') {
-      numStatements++;
-    }
+  booleanTerm(newFollow);
+
+  while (currentSymbol === 'or') {
+    nextSymbol();
+    booleanTerm(newFollow);
   }
+  expected(newFollow);
+}
 
-  for(let i = 0; i < numStatements; i++) {
-    statements[i] = [];
+function booleanTerm(follow) {
+  let newFollow = follow;
+  newFollow.push('and');
+
+  booleanFactor(newFollow);
+  while (currentSymbol === 'and') {
+    nextSymbol();
+    booleanFactor(newFollow);
   }
+  expected(newFollow);
+}
 
-  for(let i = 0; i < grammarArray.length - 1; i++) {
-    if(grammarArray[i] == '.') {
-      currentStatement++;
+function booleanFactor(follow) {
+  if (currentSymbol() === 'not') { nextSymbol(); }
+  let newFollow = follow;
+  newFollow.push('=');
+  newFollow.push('<');
+
+  arithmeticExpression(newFollow);
+  if (currentSymbol() === '=' || currentSymbol() === '<') {
+    nextSymbol();
+    arithmeticExpression(newFollow);
+  }
+}
+
+function arithmeticExpression(follow) {
+  let newFollow = follow;
+  newFollow.push('+');
+  newFollow.push('-');
+
+  term(newFollow);
+  while (currentSymbol() === '+' || currentSymbol() === '-') {
+    nextSymbol();
+    term(newFollow);
+  }
+  expected(newFollow);
+}
+
+function term(follow) {
+  let newFollow = follow;
+  newFollow.push('*');
+  newFollow.push('/');
+
+  factor(newFollow);
+  while (currentSymbol() === '*' || currentSymbol() === '/') {
+    nextSymbol();
+    factor(newFollow);
+  }
+  expected(newFollow);
+}
+
+function factor(follow) {
+  if (currentSymbol() === 'true' || currentSymbol() === 'false' || currentSymbol() === 'NUM') {
+    literal(follow);
+  } else if (currentSymbol() === 'ID') {
+    nextSymbol();
+  } else if (currentSymbol() === '(') {
+    nextSymbol();
+    expression([')']);
+    accept(')');
+  } else {
+    expected(['true', 'false', 'NUM', 'ID', '(']);
+  }
+}
+
+function literal(follow) {
+  if (currentSymbol() === 'true' || currentSymbol() === 'false' || currentSymbol() === 'NUM') {
+    if (currentSymbol() === 'NUM') {
+     nextSymbol();
     } else {
-      statements[currentStatement].push(grammarArray[i]);
+      booleanLiteral(follow);
     }
+  } else {
+    console.log("ERROR: literal error");
   }
+}
+
+function booleanLiteral(follow) {
+  if (currentSymbol() === 'true' || currentSymbol() === 'false') {
+    nextSymbol();
+  } else {
+    console.log("ERROR: boolean literal error");
+  }
+
+}
+
+function accept(symbol) {
+  if (currentSymbol() === symbol) {
+    nextSymbol();
+  } else {
+    expected([ symbol ]);
+  }
+}
+
+function expected(symbols) {
+  if(symbols.indexOf(currentSymbol()) === -1) {
+    console.log("ERROR on line " +lexemes[lexeme_index].line + ", character " + lexemes[lexeme_index].character + ": seeing " + currentSymbol() + ", expected " + symbols);
+    console.log('is valid? FALSE');
+    process.exit();
+  }
+}
+
+function nextSymbol() {
+  lexeme_index++;
+}
+
+function currentSymbol() {
+  return lexemes[lexeme_index].kind;
 }
 
 exports.parse = parse;
